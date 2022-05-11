@@ -5,7 +5,7 @@ import "github.com/gosidekick/goconfig"
 // Environment this object keep the all environment variables.
 type Environment struct {
 	// Database
-	DatabaseURI string `cfg:"DATABASE_URI" cfgRequired:"true"`
+	DatabaseURL string `cfg:"DATABASE_URL" cfgRequired:"true"`
 	// Redis
 	RedisURL    string `cfg:"REDIS_URL" cfgRequired:"true"`
 	RedisCACert string `cfg:"REDIS_CA_CERT"`

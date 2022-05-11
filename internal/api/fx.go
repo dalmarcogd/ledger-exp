@@ -23,7 +23,7 @@ var Module = fx.Options(
 	fx.Provide(
 		environment.NewEnvironment,
 		func(lc fx.Lifecycle, e environment.Environment) (database.Database, error) {
-			return database.Setup(lc, e.DatabaseURI, e.DatabaseURI)
+			return database.Setup(lc, e.DatabaseURL, e.DatabaseURL)
 		},
 		func(env environment.Environment, db database.Database, redisClient redis.Client) healthcheck.HealthCheck {
 			return healthcheck.NewChain(

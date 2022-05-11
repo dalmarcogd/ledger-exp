@@ -22,7 +22,7 @@ services:
     volumes:
       - ".:/code"
     env_file: .env-docker
-    command: [ "-path", "/code/migrations/", "-database",  "$DATABASE_URI", "up" ]
+    command: [ "-path", "/code/migrations/", "-database",  "$DATABASE_URL", "up" ]
 
   redis:
     image: redis:6
