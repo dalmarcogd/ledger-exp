@@ -22,7 +22,7 @@ services:
     volumes:
       - ".:/code"
     env_file: .env-docker
-    command: [ "-path", "/code/migrations/", "-database",  "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:5432/$POSTGRES_DB?sslmode=disable", "up" ]
+    command: [ "-path", "/code/migrations/", "-database",  "$DATABASE_URI", "up" ]
 
   redis:
     image: redis:6

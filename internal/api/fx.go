@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/pprof"
-	"net/url"
 
 	"github.com/dalmarcogd/blockchain-exp/internal/api/internal/environment"
 	"github.com/dalmarcogd/blockchain-exp/internal/api/internal/handlers"
@@ -24,15 +23,7 @@ var Module = fx.Options(
 	fx.Provide(
 		environment.NewEnvironment,
 		func(lc fx.Lifecycle, e environment.Environment) (database.Database, error) {
-			url := fmt.Sprintf(
-				"postgres://%s:%s@%s:%s/%s?sslmode=disable",
-				e.PostgresUser,
-				url.QueryEscape(e.PostgresPassword),
-				e.PostgresHost,
-				e.PostgresPort,
-				e.PostgresDatabase,
-			)
-			return database.Setup(lc, url, url)
+			return database.Setup(lc, e.DatabaseURI, e.DatabaseURI)
 		},
 		func(env environment.Environment, db database.Database, redisClient redis.Client) healthcheck.HealthCheck {
 			return healthcheck.NewChain(
