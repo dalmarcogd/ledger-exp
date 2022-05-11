@@ -1,1 +1,1 @@
-web: bin/blockchain-exp-api
+web: cmd/api
