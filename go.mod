@@ -7,7 +7,7 @@ require (
 	github.com/brianvoe/gofakeit/v6 v6.16.0
 	github.com/docker/go-connections v0.4.0
 	github.com/go-redis/redis/v8 v8.11.5
-	github.com/golang-migrate/migrate/v4 v4.15.1
+	github.com/golang-migrate/migrate/v4 v4.15.2
 	github.com/golang/mock v1.6.0
 	github.com/gosidekick/goconfig v1.3.1
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.10.0
