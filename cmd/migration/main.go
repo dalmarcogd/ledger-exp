@@ -15,7 +15,7 @@ func main() {
 		log.Fatal("DATABASE_URL is required")
 	}
 
-	m, err := migrate.New("file://../../migrations/", databaseURL)
+	m, err := migrate.New("file://migrations/", databaseURL)
 	if err != nil {
 		log.Fatal(err)
 	}
