@@ -3,6 +3,8 @@
 build:
   languages:
     - go
+  docker:
+    web: Dockerfile
 
 run:
   web: bin/api
