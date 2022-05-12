@@ -14,7 +14,7 @@ type Environment struct {
 	Service     string `cfg:"SERVICE" cfgRequired:"true"`
 	Version     string `cfg:"VERSION" cfgRequired:"true"`
 	HTTPHost    string `cfg:"HTTP_HOST" cfgRequired:"true"`
-	HTTPPort    string `cfg:"HTTP_PORT" cfgRequired:"true"`
+	HTTPPort    string `cfg:"PORT" cfgRequired:"true"`
 	DebugPprof  bool   `cfg:"DEBUG_PPROF"`
 }
 
