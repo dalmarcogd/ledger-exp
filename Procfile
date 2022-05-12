@@ -1,2 +1,2 @@
 web: bin/api
-migration: bin/migration
+one-off: bin/migration
