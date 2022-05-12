@@ -1,2 +1,2 @@
-api: bin/api
+web: bin/api
 migration: bin/migration
