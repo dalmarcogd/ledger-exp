@@ -38,6 +38,45 @@ services:
     ports:
       - '6379:6379'
 
+  otel-collector:
+    image: otel/opentelemetry-collector:latest
+    container_name: otel-collector
+    command: [ "--config=/conf/otel-collector-config.yml", "--log-level=DEBUG" ]
+    volumes:
+      - ./otel-collector-config.yml:/conf/otel-collector-config.yml
+    ports:
+      - "9464:9464"
+      - "55680:55680"
+      - "55681:55681"
+    depends_on:
+      - zipkin
+      - jaeger
+      - prometheus
+
+  # Zipkin
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: zipkin
+    ports:
+      - "9411:9411"
+
+  jaeger:
+    image: jaegertracing/all-in-one
+    container_name: jaeger
+    ports:
+      - "14268:14268"   # jaeger-collector HTTP server (tracer provider)
+      - "14250"
+      - "16686:16686"   # HTTP server (browser UI)
+
+  # Prometheus
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+
 networks:
   current:
     name: current
