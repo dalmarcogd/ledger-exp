@@ -9,6 +9,8 @@ import (
 	"github.com/uptrace/bun/driver/pgdriver"
 )
 
+type NullTime = sql.NullTime
+
 type DB interface {
 	bun.IConn
 	bun.IDB

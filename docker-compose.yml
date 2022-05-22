@@ -49,16 +49,8 @@ services:
       - "55680:55680"
       - "55681:55681"
     depends_on:
-      - zipkin
       - jaeger
       - prometheus
-
-  # Zipkin
-  zipkin:
-    image: openzipkin/zipkin:latest
-    container_name: zipkin
-    ports:
-      - "9411:9411"
 
   jaeger:
     image: jaegertracing/all-in-one

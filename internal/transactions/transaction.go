@@ -31,7 +31,12 @@ type Transaction struct {
 	Amount   Amount           `json:"amount"`
 }
 
-func NewTransaction(prevHash Hash, from accounts.Account, to accounts.Account, amount Amount) (Transaction, error) {
+func NewTransaction(
+	prevHash Hash,
+	from accounts.Account,
+	to accounts.Account,
+	amount Amount,
+) (Transaction, error) {
 	transaction := Transaction{
 		ID:       uuid.New(),
 		PrevHash: prevHash,

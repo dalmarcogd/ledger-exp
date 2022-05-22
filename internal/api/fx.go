@@ -9,6 +9,7 @@ import (
 
 	"github.com/dalmarcogd/blockchain-exp/internal/api/internal/environment"
 	"github.com/dalmarcogd/blockchain-exp/internal/api/internal/handlers"
+	"github.com/dalmarcogd/blockchain-exp/internal/transactions"
 	"github.com/dalmarcogd/blockchain-exp/pkg/database"
 	"github.com/dalmarcogd/blockchain-exp/pkg/healthcheck"
 	"github.com/dalmarcogd/blockchain-exp/pkg/http/middlewares"
@@ -25,6 +26,9 @@ var Module = fx.Options(
 		func(lc fx.Lifecycle, e environment.Environment) (database.Database, error) {
 			return database.Setup(lc, e.DatabaseURL, e.DatabaseURL)
 		},
+		func(env environment.Environment) (redis.Client, error) {
+			return redis.NewClient(env.RedisURL, env.RedisCACert)
+		},
 		func(env environment.Environment, db database.Database, redisClient redis.Client) healthcheck.HealthCheck {
 			return healthcheck.NewChain(
 				healthcheck.NewDatabaseConnectivity(db.Master()),
@@ -34,12 +38,11 @@ var Module = fx.Options(
 				redis.NewHealthCheck(redisClient),
 			)
 		},
-		func(env environment.Environment) (redis.Client, error) {
-			return redis.NewClient(env.RedisURL, env.RedisCACert)
-		},
 	),
 	// Domains
-	fx.Provide(),
+	fx.Provide(
+		transactions.NewRepository,
+	),
 	// Endpoints
 	fx.Provide(
 		handlers.NewLivenessFunc,
