@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/brianvoe/gofakeit/v6"
-	"github.com/dalmarcogd/blockchain-exp/pkg/testingcontainers"
-	"github.com/dalmarcogd/blockchain-exp/pkg/zapctx"
+	"github.com/dalmarcogd/ledger-exp/pkg/testingcontainers"
+	"github.com/dalmarcogd/ledger-exp/pkg/zapctx"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 )

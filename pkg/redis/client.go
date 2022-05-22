@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dalmarcogd/blockchain-exp/pkg/healthcheck"
+	"github.com/dalmarcogd/ledger-exp/pkg/healthcheck"
 	"github.com/go-redis/redis/v8"
 	redistrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/go-redis/redis.v8"
 )

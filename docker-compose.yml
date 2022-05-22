@@ -11,9 +11,9 @@ services:
     env_file: .env-docker
     command: [ "postgres", "-c", "log_statement=all", "-c", "log_destination=stderr" ]
     environment:
-      POSTGRES_USER: blockchain-exp
-      POSTGRES_PASSWORD: blockchain-exp
-      POSTGRES_DB: blockchain-exp
+      POSTGRES_USER: ledger-exp
+      POSTGRES_PASSWORD: ledger-exp
+      POSTGRES_DB: ledger-exp
 
   database-migration:
     image: migrate/migrate

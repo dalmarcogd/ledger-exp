@@ -10,7 +10,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/dalmarcogd/blockchain-exp/pkg/zapctx"
+	"github.com/dalmarcogd/ledger-exp/pkg/zapctx"
 	"go.uber.org/zap"
 )
 

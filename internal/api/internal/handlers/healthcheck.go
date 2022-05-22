@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"github.com/dalmarcogd/blockchain-exp/pkg/healthcheck"
-	"github.com/dalmarcogd/blockchain-exp/pkg/zapctx"
+	"github.com/dalmarcogd/ledger-exp/pkg/healthcheck"
+	"github.com/dalmarcogd/ledger-exp/pkg/zapctx"
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
 )

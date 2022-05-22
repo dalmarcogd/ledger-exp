@@ -3,7 +3,7 @@ package transactions
 import (
 	"time"
 
-	"github.com/dalmarcogd/blockchain-exp/pkg/database"
+	"github.com/dalmarcogd/ledger-exp/pkg/database"
 	"github.com/google/uuid"
 	"github.com/uptrace/bun"
 )

@@ -6,7 +6,7 @@ import (
 	"encoding/binary"
 	"encoding/gob"
 
-	"github.com/dalmarcogd/blockchain-exp/internal/accounts"
+	"github.com/dalmarcogd/ledger-exp/internal/accounts"
 	"github.com/google/uuid"
 )
 

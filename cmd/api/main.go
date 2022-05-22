@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
-	"github.com/dalmarcogd/blockchain-exp/internal/api"
-	"github.com/dalmarcogd/blockchain-exp/pkg/zapctx"
+	"github.com/dalmarcogd/ledger-exp/internal/api"
+	"github.com/dalmarcogd/ledger-exp/pkg/zapctx"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 )

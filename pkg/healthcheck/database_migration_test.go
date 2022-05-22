@@ -7,8 +7,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/dalmarcogd/blockchain-exp/pkg/database"
-	"github.com/dalmarcogd/blockchain-exp/pkg/testingcontainers"
+	"github.com/dalmarcogd/ledger-exp/pkg/database"
+	"github.com/dalmarcogd/ledger-exp/pkg/testingcontainers"
 	"github.com/stretchr/testify/assert"
 )
 

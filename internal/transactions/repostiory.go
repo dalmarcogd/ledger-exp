@@ -3,8 +3,8 @@ package transactions
 import (
 	"context"
 
-	"github.com/dalmarcogd/blockchain-exp/pkg/database"
-	"github.com/dalmarcogd/blockchain-exp/pkg/tracer"
+	"github.com/dalmarcogd/ledger-exp/pkg/database"
+	"github.com/dalmarcogd/ledger-exp/pkg/tracer"
 )
 
 type Repository interface {

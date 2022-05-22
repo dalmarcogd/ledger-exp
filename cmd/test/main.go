@@ -4,13 +4,13 @@ import (
 	"context"
 	"log"
 
-	"github.com/dalmarcogd/blockchain-exp/internal/accounts"
-	"github.com/dalmarcogd/blockchain-exp/internal/transactions"
-	"github.com/dalmarcogd/blockchain-exp/pkg/tracer"
+	"github.com/dalmarcogd/ledger-exp/internal/accounts"
+	"github.com/dalmarcogd/ledger-exp/internal/transactions"
+	"github.com/dalmarcogd/ledger-exp/pkg/tracer"
 )
 
 func main() {
-	t, err := tracer.New("localhost:55681", "blockchain-exp", "local", "1.0.0")
+	t, err := tracer.New("localhost:55681", "ledger-exp", "local", "1.0.0")
 	if err != nil {
 		log.Panic(err)
 	}

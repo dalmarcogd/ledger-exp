@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="run api" type="GoApplicationRunConfiguration" factoryName="Go Application">
-    <module name="blockchain-exp" />
+    <module name="ledger-exp" />
     <working_directory value="$PROJECT_DIR$" />
     <EXTENSION ID="net.ashald.envfile">
       <option name="IS_ENABLED" value="true" />
@@ -14,7 +14,7 @@
       </ENTRIES>
     </EXTENSION>
     <kind value="PACKAGE" />
-    <package value="github.com/dalmarcogd/blockchain-exp/cmd/api" />
+    <package value="github.com/dalmarcogd/ledger-exp/cmd/api" />
     <directory value="$PROJECT_DIR$" />
     <filePath value="$PROJECT_DIR$" />
     <method v="2" />
