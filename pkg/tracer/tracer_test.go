@@ -1,5 +1,4 @@
 //go:build unit
-// +build unit
 
 package tracer
 
@@ -8,17 +7,19 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/mocktracer"
+	"github.com/stretchr/testify/assert"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 )
 
 func TestSpans(t *testing.T) {
-	mocktracer.Start()
-
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	serviceImpl := New("localhost:8126", "", "", "")
+	serviceImpl, err := New("localhost:8126", "", "", "")
+	assert.NoError(t, err)
+	otel.SetTracerProvider(trace.NewNoopTracerProvider())
 
 	_, s := serviceImpl.Span(context.Background())
-	s.Finish()
+	s.End()
 }

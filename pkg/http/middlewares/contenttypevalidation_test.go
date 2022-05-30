@@ -1,11 +1,9 @@
 //go:build unit
-// +build unit
 
 package middlewares
 
 import (
 	"bytes"
-	"context"
 	"errors"
 	"io/ioutil"
 	"net/http"
@@ -35,7 +33,7 @@ func TestNewDefaultContentTypeValidator(t *testing.T) {
 	mockHandler := NewMockHandler(ctrl)
 	mockResponseWriter := NewMockResponseWriter(ctrl)
 
-	middleware := NewDefaultContentTypeValidator(context.Background())
+	middleware := NewDefaultContentTypeValidator()
 	handlerFunc := middleware(mockHandler)
 
 	t.Run("Handle request with valid content-type and body", func(t *testing.T) {
@@ -158,7 +156,7 @@ func TestNewDefaultContentTypeValidator(t *testing.T) {
 	})
 
 	t.Run("Respond bad request due invalid body with unsupported mime type", func(t *testing.T) {
-		handlerFunc := validateContentType(context.Background(), []string{"text/css"})(mockHandler)
+		handlerFunc := validateContentType([]string{"text/css"})(mockHandler)
 
 		request := &http.Request{
 			Header: map[string][]string{},
@@ -216,7 +214,7 @@ func TestNewContentTypeValidator(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			middleware, err := NewContentTypeValidator(context.Background(), tt.inputAcceptedContentTypes)
+			middleware, err := NewContentTypeValidator(tt.inputAcceptedContentTypes)
 			if tt.wantMiddlewareNil {
 				assert.Nil(t, middleware)
 			} else {

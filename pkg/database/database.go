@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/dalmarcogd/ledger-exp/pkg/tracer"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
@@ -34,6 +35,7 @@ type database struct {
 }
 
 func New(
+	t tracer.Tracer,
 	postgresMasterURL string,
 	postgresReplicaURL string,
 ) (Database, error) {
@@ -46,8 +48,9 @@ func New(
 
 	masterDBSQL := sql.OpenDB(connector)
 	masterDBSQL.SetMaxOpenConns(1)
-	db := bun.NewDB(masterDBSQL, pgdialect.New())
+	db := bun.NewDB(masterDBSQL, pgdialect.New(), bun.WithDiscardUnknownColumns())
 	db.AddQueryHook(newDatabaseLogger())
+	db.AddQueryHook(newTracingHook(t))
 	d.dbMaster = db
 
 	connector, err = pgdriver.NewDriver().OpenConnector(postgresReplicaURL)
@@ -59,6 +62,7 @@ func New(
 	replicaDBSQL.SetMaxOpenConns(1)
 	db = bun.NewDB(replicaDBSQL, pgdialect.New())
 	db.AddQueryHook(newDatabaseLogger())
+	db.AddQueryHook(newTracingHook(t))
 	d.dbReplica = db
 
 	return d, nil

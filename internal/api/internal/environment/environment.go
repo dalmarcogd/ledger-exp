@@ -9,6 +9,8 @@ type Environment struct {
 	// Redis
 	RedisURL    string `cfg:"REDIS_URL" cfgRequired:"true"`
 	RedisCACert string `cfg:"REDIS_CA_CERT"`
+	// Open Telemetry
+	OtelCollectorHost string `cfg:"OTEL_COLLECTOR_HOST" cfgRequired:"true"`
 	// Application
 	Environment string `cfg:"ENVIRONMENT" cfgRequired:"true"`
 	Service     string `cfg:"SERVICE" cfgRequired:"true"`

@@ -14,21 +14,18 @@ type transactionModel struct {
 	ID            uuid.UUID `bun:"id,pk"`
 	FromAccountID uuid.UUID `bun:"from_account_id,nullzero"`
 	ToAccountID   uuid.UUID `bun:"to_account_id,nullzero"`
-	Amount        Amount    `bun:"amount"`
-	Hash          Hash      `bun:"hash"`
-	PrevHash      Hash      `bun:"prev_hash"`
+	Amount        float64   `bun:"amount"`
 	Description   string    `bun:"description"`
-	CreatedAt     time.Time `bun:"created_at,nullzero"`
+	CreatedAt     time.Time `bun:"created_at,notnull"`
 }
 
 func newTransactionModel(tx Transaction) transactionModel {
 	return transactionModel{
-		ID:            tx.ID,
-		FromAccountID: tx.From.ID,
-		ToAccountID:   tx.To.ID,
+		ID:            uuid.New(),
+		FromAccountID: tx.From,
+		ToAccountID:   tx.To,
 		Amount:        tx.Amount,
-		Hash:          tx.Hash,
-		PrevHash:      tx.PrevHash,
+		Description:   tx.Description,
 		CreatedAt:     time.Now().UTC(),
 	}
 }
@@ -37,8 +34,6 @@ type transactionFilter struct {
 	ID             uuid.NullUUID
 	FromAccountID  uuid.NullUUID
 	ToAccountID    uuid.NullUUID
-	Hash           Hash
-	PrevHash       Hash
 	CreatedAtBegin database.NullTime
 	CreatedAtEnd   database.NullTime
 }

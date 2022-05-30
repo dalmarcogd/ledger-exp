@@ -14,10 +14,10 @@ type Repository interface {
 
 type repository struct {
 	tracer tracer.Tracer
-	db     database.DB
+	db     database.Database
 }
 
-func NewRepository(t tracer.Tracer, db database.DB) Repository {
+func NewRepository(t tracer.Tracer, db database.Database) Repository {
 	return repository{
 		tracer: t,
 		db:     db,
@@ -28,14 +28,24 @@ func (r repository) Create(ctx context.Context, model transactionModel) (transac
 	ctx, span := r.tracer.Span(ctx)
 	defer span.End()
 
-	return transactionModel{}, nil
+	_, err := r.db.Master().
+		NewInsert().
+		Model(&model).
+		Returning("*").
+		Exec(ctx)
+	if err != nil {
+		span.RecordError(err)
+		return transactionModel{}, err
+	}
+
+	return model, nil
 }
 
 func (r repository) GetByFilter(ctx context.Context, filter transactionFilter) ([]transactionModel, error) {
 	ctx, span := r.tracer.Span(ctx)
 	defer span.End()
 
-	selectQuery := r.db.NewSelect()
+	selectQuery := r.db.Replica().NewSelect().Model(&transactionModel{})
 	if filter.ID.Valid {
 		selectQuery.Where("id = ?", filter.ID.UUID)
 	}
@@ -45,8 +55,23 @@ func (r repository) GetByFilter(ctx context.Context, filter transactionFilter) (
 	}
 
 	if filter.ToAccountID.Valid {
-		selectQuery.Where("from_acocunt_id = ?", filter.FromAccountID.UUID)
+		selectQuery.Where("to_acocunt_id = ?", filter.FromAccountID.UUID)
 	}
 
-	return []transactionModel{}, nil
+	if filter.CreatedAtBegin.Valid {
+		selectQuery.Where("created_at >= ?", filter.CreatedAtBegin.Time)
+	}
+
+	if filter.CreatedAtEnd.Valid {
+		selectQuery.Where("created_at <= ?", filter.CreatedAtEnd.Time)
+	}
+
+	var trxs []transactionModel
+	_, err := selectQuery.Exec(ctx, &trxs)
+	if err != nil {
+		span.RecordError(err)
+		return nil, err
+	}
+
+	return trxs, nil
 }

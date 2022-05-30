@@ -4,11 +4,13 @@ import (
 	"context"
 	"crypto/x509"
 	"fmt"
+	"net/url"
 	"time"
 
 	"github.com/dalmarcogd/ledger-exp/pkg/healthcheck"
+	"github.com/go-redis/redis/extra/redisotel/v8"
 	"github.com/go-redis/redis/v8"
-	redistrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/go-redis/redis.v8"
+	semconv "go.opentelemetry.io/otel/semconv/v1.10.0"
 )
 
 type Client interface {
@@ -16,14 +18,16 @@ type Client interface {
 	Ping(ctx context.Context) *redis.StatusCmd
 	Get(ctx context.Context, key string) *redis.StringCmd
 	SetArgs(ctx context.Context, key string, value interface{}, a redis.SetArgs) *redis.StatusCmd
+	SetNX(ctx context.Context, key string, value interface{}, expiration time.Duration) *redis.BoolCmd
+	Del(ctx context.Context, keys ...string) *redis.IntCmd
 }
 
 type SetArgs = redis.SetArgs
 
 type Error = redis.Error
 
-func NewClient(url, caCert string) (Client, error) {
-	opt, err := redis.ParseURL(url)
+func NewClient(redisURL, caCert string) (Client, error) {
+	opt, err := redis.ParseURL(redisURL)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +39,22 @@ func NewClient(url, caCert string) (Client, error) {
 	}
 
 	rdb := redis.NewClient(opt)
-	redistrace.WrapClient(rdb, redistrace.WithServiceName(fmt.Sprintf("redis.client://%s/%d", opt.Addr, opt.DB)))
+
+	uri, err := url.ParseRequestURI(redisURL)
+	if err != nil {
+		return nil, err
+	}
+
+	rdb.AddHook(
+		redisotel.NewTracingHook(
+			redisotel.WithAttributes(
+				semconv.ServiceNameKey.String(fmt.Sprintf("redis://%s/%d", opt.Addr, opt.DB)),
+				semconv.NetPeerNameKey.String(uri.Host),
+				semconv.NetPeerPortKey.String(uri.Port()),
+			),
+		),
+	)
+
 	return rdb, nil
 }
 

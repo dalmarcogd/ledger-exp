@@ -1,0 +1,16 @@
+#!/bin/sh
+
+go install github.com/golang/mock/mockgen@latest
+
+# mocks to pkg/distlock
+
+mockgen -source pkg/distlock/distlock.go -destination pkg/distlock/distlock_mock.go -package distlock DistLock
+
+# mocks to pkg/redis
+
+mockgen -source pkg/redis/client.go -destination pkg/redis/client_mock.go -package redis Client
+
+# mocks to pkg/tracer
+
+mockgen -source pkg/tracer/tracer.go -destination pkg/tracer/tracer_mock.go -package tracer Tracer
+

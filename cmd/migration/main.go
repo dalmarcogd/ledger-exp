@@ -20,6 +20,12 @@ func main() {
 		log.Fatal(err)
 	}
 
+	version, dirty, err := m.Version()
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("migration version=%d, dirty=%t", version, dirty)
+
 	err = m.Up()
 	if err != nil {
 		log.Fatal(err)

@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/blockchain-exp.iml" filepath="$PROJECT_DIR$/.idea/blockchain-exp.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/ledger-exp.iml" filepath="$PROJECT_DIR$/.idea/ledger-exp.iml" />
     </modules>
   </component>
 </project>

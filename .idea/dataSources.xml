@@ -8,5 +8,12 @@
       <jdbc-url>jdbc:postgresql://ec2-52-200-215-149.compute-1.amazonaws.com:5432/db8nrjj6f4e47v</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
+    <data-source source="LOCAL" name="postgres@localhost" uuid="12e6c2a6-bb23-4b8b-92fd-b27b8820e63e">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://localhost:5432/ledger-exp</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
   </component>
 </project>

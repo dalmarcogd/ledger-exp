@@ -7,13 +7,12 @@ import (
 	"strings"
 
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.10.0"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -22,15 +21,17 @@ import (
 var symbolsToIgnore = regexp.MustCompile(`[\\*()]+`)
 
 type (
-	Attributes     = attribute.KeyValue
-	Span           = trace.Span
+	TSpan struct {
+		trace.Span
+	}
 	TextMapCarrier = propagation.TextMapCarrier
 )
 
 type Tracer interface {
 	ServiceName() string
-	Span(ctx context.Context, options ...Attributes) (context.Context, Span)
-	Extract(ctx context.Context, carrier TextMapCarrier, options ...Attributes) (context.Context, Span, error)
+	Span(ctx context.Context, options ...Attributes) (context.Context, TSpan)
+	SpanName(ctx context.Context, name string, options ...Attributes) (context.Context, TSpan)
+	Extract(ctx context.Context, carrier TextMapCarrier) context.Context
 	Inject(ctx context.Context, carrier TextMapCarrier) error
 	Stop(ctx context.Context) error
 }
@@ -46,7 +47,7 @@ type (
 )
 
 func New(endpoint, service, env, version string) (Tracer, error) {
-	s := &tracing{
+	s := tracing{
 		endpoint:    endpoint,
 		serviceName: service,
 		env:         env,
@@ -86,16 +87,21 @@ func New(endpoint, service, env, version string) (Tracer, error) {
 	return s, nil
 }
 
-func (s *tracing) ServiceName() string {
+func (s tracing) ServiceName() string {
 	return s.serviceName
 }
 
-func (s *tracing) Span(ctx context.Context, attrs ...Attributes) (context.Context, Span) {
+func (s tracing) Span(ctx context.Context, attrs ...Attributes) (context.Context, TSpan) {
+	return s.SpanName(ctx, "", attrs...)
+}
+
+func (s tracing) SpanName(ctx context.Context, name string, attrs ...Attributes) (context.Context, TSpan) {
 	funcName := ""
 	line := 0
 	fileName := ""
-	if pc, f, l, ok := runtime.Caller(1); ok {
+	if pc, f, l, ok := runtime.Caller(2); ok {
 		fileName = f
+		attrs = append(attrs, semconv.CodeFilepathKey.String(fileName))
 		line = l
 
 		// Compose package/struct/method/function name
@@ -103,8 +109,8 @@ func (s *tracing) Span(ctx context.Context, attrs ...Attributes) (context.Contex
 
 		// Get last slash because the `FuncForPC.Name` return package + way of struct + method.
 		//
-		// For example: `github.com/hashlab/issuing-card/cards.(*repository).Get`
-		// With this code we only work with `cards.(*repository).Get`
+		// For example: `github.com/dalmarcogd/ledger-exp/accounts.(*repository).GetByFilter`
+		// With this code we only work with `accounts.(*repository).GetByFilter`
 		lastDot := strings.LastIndexByte(funcName, '/')
 		if lastDot < 0 {
 			funcName = symbolsToIgnore.ReplaceAllString(funcName, "")
@@ -116,29 +122,34 @@ func (s *tracing) Span(ctx context.Context, attrs ...Attributes) (context.Contex
 			// With this code we only work with `cards.repository.Get`
 			funcName = symbolsToIgnore.ReplaceAllString(funcName[lastDot+1:], "")
 		}
+
+		attrs = append(attrs, semconv.CodeFunctionKey.String(funcName))
 	}
 
-	attrs = append(attrs, attribute.Int(Line, line))
+	if name == "" {
+		name = funcName
+	}
 
-	return otel.
+	attrs = append(attrs, semconv.CodeLineNumberKey.Int(line))
+
+	ctx, sp := otel.
 		Tracer(fileName).
 		Start(
 			ctx,
-			funcName,
+			name,
 			trace.WithAttributes(
 				attrs...,
 			),
 		)
+
+	return ctx, TSpan{Span: sp}
 }
 
 func (s tracing) Extract(
 	ctx context.Context,
 	carrier TextMapCarrier,
-	options ...Attributes,
-) (context.Context, Span, error) {
-	ctx = otel.GetTextMapPropagator().Extract(ctx, carrier)
-	ctx, sp := s.Span(ctx, options...)
-	return ctx, sp, nil
+) context.Context {
+	return otel.GetTextMapPropagator().Extract(ctx, carrier)
 }
 
 func (s tracing) Inject(ctx context.Context, carrier TextMapCarrier) error {

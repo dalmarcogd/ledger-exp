@@ -22,7 +22,7 @@ func NewPostgresContainer() (string, func(context.Context) error, error) {
 	ctx := context.Background()
 
 	// Setup URL and credentials
-	templateURL := "postgres://%s:%s@localhost:%s/issuing?sslmode=disable"
+	templateURL := "postgres://%s:%s@localhost:%s/ledger-exp?sslmode=disable"
 	username := gofakeit.Username()
 	password := gofakeit.Password(false, false, false, false, false, 15)
 
@@ -37,7 +37,7 @@ func NewPostgresContainer() (string, func(context.Context) error, error) {
 			Env: map[string]string{
 				"POSTGRES_USER":     username,
 				"POSTGRES_PASSWORD": password,
-				"POSTGRES_DB":       "issuing",
+				"POSTGRES_DB":       "ledger-exp",
 				"POSTGRES_SSL_MODE": "disable",
 			},
 			Cmd: []string{
@@ -70,7 +70,7 @@ func NewPostgresContainer() (string, func(context.Context) error, error) {
 
 // RunMigrateDatabase execute all migrations against a database.
 // Example:
-// postgresURL   := "postgres://%s:%s@localhost:%s/issuing?sslmode=disable"
+// postgresURL   := "postgres://%s:%s@localhost:%s/ledger-exp?sslmode=disable"
 //
 // _, callerPath, _, _ := runtime.Caller(0)
 // migrationsURL := fmt.Sprintf("file://%s/../../migrations/", filepath.Dir(callerPath)).

@@ -36,6 +36,25 @@ func (m *MockClient) EXPECT() *MockClientMockRecorder {
 	return m.recorder
 }
 
+// Del mocks base method.
+func (m *MockClient) Del(ctx context.Context, keys ...string) *redis.IntCmd {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx}
+	for _, a := range keys {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Del", varargs...)
+	ret0, _ := ret[0].(*redis.IntCmd)
+	return ret0
+}
+
+// Del indicates an expected call of Del.
+func (mr *MockClientMockRecorder) Del(ctx interface{}, keys ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx}, keys...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Del", reflect.TypeOf((*MockClient)(nil).Del), varargs...)
+}
+
 // Get mocks base method.
 func (m *MockClient) Get(ctx context.Context, key string) *redis.StringCmd {
 	m.ctrl.T.Helper()
@@ -76,6 +95,20 @@ func (m *MockClient) SetArgs(ctx context.Context, key string, value interface{},
 func (mr *MockClientMockRecorder) SetArgs(ctx, key, value, a interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetArgs", reflect.TypeOf((*MockClient)(nil).SetArgs), ctx, key, value, a)
+}
+
+// SetNX mocks base method.
+func (m *MockClient) SetNX(ctx context.Context, key string, value interface{}, expiration time.Duration) *redis.BoolCmd {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetNX", ctx, key, value, expiration)
+	ret0, _ := ret[0].(*redis.BoolCmd)
+	return ret0
+}
+
+// SetNX indicates an expected call of SetNX.
+func (mr *MockClientMockRecorder) SetNX(ctx, key, value, expiration interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetNX", reflect.TypeOf((*MockClient)(nil).SetNX), ctx, key, value, expiration)
 }
 
 // WithTimeout mocks base method.

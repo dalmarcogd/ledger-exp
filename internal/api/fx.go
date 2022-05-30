@@ -7,13 +7,21 @@ import (
 	"net/http"
 	"net/http/pprof"
 
+	"github.com/dalmarcogd/ledger-exp/internal/accounts"
 	"github.com/dalmarcogd/ledger-exp/internal/api/internal/environment"
 	"github.com/dalmarcogd/ledger-exp/internal/api/internal/handlers"
+	"github.com/dalmarcogd/ledger-exp/internal/api/internal/handlers/accountsh"
+	"github.com/dalmarcogd/ledger-exp/internal/api/internal/handlers/statementsh"
+	"github.com/dalmarcogd/ledger-exp/internal/api/internal/handlers/transactionsh"
+	"github.com/dalmarcogd/ledger-exp/internal/balances"
+	"github.com/dalmarcogd/ledger-exp/internal/statements"
 	"github.com/dalmarcogd/ledger-exp/internal/transactions"
 	"github.com/dalmarcogd/ledger-exp/pkg/database"
+	"github.com/dalmarcogd/ledger-exp/pkg/distlock"
 	"github.com/dalmarcogd/ledger-exp/pkg/healthcheck"
 	"github.com/dalmarcogd/ledger-exp/pkg/http/middlewares"
 	"github.com/dalmarcogd/ledger-exp/pkg/redis"
+	"github.com/dalmarcogd/ledger-exp/pkg/tracer"
 	"github.com/labstack/echo/v4"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
@@ -23,8 +31,8 @@ var Module = fx.Options(
 	// Infra
 	fx.Provide(
 		environment.NewEnvironment,
-		func(lc fx.Lifecycle, e environment.Environment) (database.Database, error) {
-			return database.Setup(lc, e.DatabaseURL, e.DatabaseURL)
+		func(lc fx.Lifecycle, e environment.Environment, t tracer.Tracer) (database.Database, error) {
+			return database.Setup(lc, t, e.DatabaseURL, e.DatabaseURL)
 		},
 		func(env environment.Environment) (redis.Client, error) {
 			return redis.NewClient(env.RedisURL, env.RedisCACert)
@@ -38,15 +46,31 @@ var Module = fx.Options(
 				redis.NewHealthCheck(redisClient),
 			)
 		},
+		func(lc fx.Lifecycle, e environment.Environment) (tracer.Tracer, error) {
+			return tracer.Setup(lc, e.OtelCollectorHost, e.Service, e.Environment, e.Version)
+		},
+		distlock.NewDistock,
 	),
 	// Domains
 	fx.Provide(
+		accounts.NewRepository,
+		accounts.NewService,
 		transactions.NewRepository,
+		transactions.NewService,
+		statements.NewRepository,
+		statements.NewService,
+		balances.NewRepository,
+		balances.NewService,
 	),
 	// Endpoints
 	fx.Provide(
 		handlers.NewLivenessFunc,
 		handlers.NewReadinessFunc,
+		accountsh.NewCreateAccountFunc,
+		accountsh.NewGetByIDAccountFunc,
+		statementsh.NewListAccountStatementFunc,
+		transactionsh.NewCreateTransactionFunc,
+		transactionsh.NewGetByIDTransactionFunc,
 	),
 	// Startup applications
 	fx.Invoke(func(
@@ -72,15 +96,29 @@ func setupLogger(service, version, env string) (*zap.Logger, error) {
 	return logger, nil
 }
 
+//nolint:funlen
 func runHTTPServer(
 	lc fx.Lifecycle,
 	env environment.Environment,
+	t tracer.Tracer,
 	readinessFunc handlers.ReadinessFunc,
 	livenessFunc handlers.LivenessFunc,
+	createAccountFunc accountsh.CreateAccountFunc,
+	getByIDAccountFunc accountsh.GetByIDAccountFunc,
+	createTransactionFunc transactionsh.CreateTransactionFunc,
+	getByIDTransactionFunc transactionsh.GetByIDTransactionFunc,
+	listAccountStatementFunc statementsh.ListAccountStatementFunc,
 ) error {
 	e := echo.New()
+
 	e.GET("/readiness", echo.HandlerFunc(readinessFunc))
 	e.GET("/liveness", echo.HandlerFunc(livenessFunc))
+	v1 := e.Group("/v1")
+	v1.POST("/accounts", echo.HandlerFunc(createAccountFunc))
+	v1.GET("/accounts/:id", echo.HandlerFunc(getByIDAccountFunc))
+	v1.GET("/accounts/:id/statements", echo.HandlerFunc(listAccountStatementFunc))
+	v1.POST("/transactions", echo.HandlerFunc(createTransactionFunc))
+	v1.GET("/transactions/:id", echo.HandlerFunc(getByIDTransactionFunc))
 
 	hmux := http.NewServeMux()
 	hmux.Handle("/", e)
@@ -92,7 +130,8 @@ func runHTTPServer(
 		hmux.HandleFunc("/debug/pprof/trace", pprof.Trace)
 	}
 
-	apiMiddlewares := make([]middlewares.Middleware, 0, 5)
+	apiMiddlewares := make([]middlewares.Middleware, 0, 3)
+	apiMiddlewares = append(apiMiddlewares, middlewares.NewTracerHTTPMiddleware(t, "/", "/readiness", "/liveness"))
 	apiMiddlewares = append(apiMiddlewares, middlewares.NewRecoveryHTTPMiddleware())
 	apiMiddlewares = append(apiMiddlewares, middlewares.NewDefaultContentTypeValidator())
 

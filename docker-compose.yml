@@ -1,5 +1,36 @@
 services:
 
+  ledger-exp-api:
+    depends_on:
+      - postgres
+      - database-migration
+      - redis
+      - otel-collector
+    image: ledger-exp-api:latest
+    build:
+      dockerfile: ./Dockerfile
+      context: .
+      target: build-local
+    container_name: ledger-exp-api
+    restart: unless-stopped
+    networks:
+      - current
+    ports:
+      - "8080:8080"
+    volumes:
+      - ".:/code"
+    environment:
+      DATABASE_URL: "$DATABASE_URL"
+      REDIS_URL: "$REDIS_URL"
+      OTEL_COLLECTOR_HOST: "$OTEL_COLLECTOR_HOST"
+      ENVIRONMENT: "$ENVIRONMENT"
+      SERVICE: "$SERVICE"
+      VERSION: "$VERSION"
+      HTTP_HOST: "$HTTP_HOST"
+      PORT: "$PORT"
+      DEBUG_PPROF: "$DEBUG_PPROF"
+    command: "go run ./cmd/api/main.go"
+
   postgres:
     image: postgres:13-alpine
     container_name: postgres
@@ -8,7 +39,6 @@ services:
       - current
     ports:
       - "5432:5432"
-    env_file: .env-docker
     command: [ "postgres", "-c", "log_statement=all", "-c", "log_destination=stderr" ]
     environment:
       POSTGRES_USER: ledger-exp
@@ -25,7 +55,6 @@ services:
       - current
     volumes:
       - ".:/code"
-    env_file: .env-docker
     command: [ "-path", "/code/migrations/", "-database",  "$DATABASE_URL", "up" ]
 
   redis:
@@ -41,6 +70,7 @@ services:
   otel-collector:
     image: otel/opentelemetry-collector:latest
     container_name: otel-collector
+    restart: unless-stopped
     command: [ "--config=/conf/otel-collector-config.yml", "--log-level=DEBUG" ]
     volumes:
       - ./otel-collector-config.yml:/conf/otel-collector-config.yml
@@ -48,6 +78,8 @@ services:
       - "9464:9464"
       - "55680:55680"
       - "55681:55681"
+    networks:
+      - current
     depends_on:
       - jaeger
       - prometheus
@@ -55,6 +87,9 @@ services:
   jaeger:
     image: jaegertracing/all-in-one
     container_name: jaeger
+    restart: unless-stopped
+    networks:
+      - current
     ports:
       - "14268:14268"   # jaeger-collector HTTP server (tracer provider)
       - "14250"
@@ -62,10 +97,13 @@ services:
 
   # Prometheus
   prometheus:
-    container_name: prometheus
     image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - current
     ports:
       - "9090:9090"
 

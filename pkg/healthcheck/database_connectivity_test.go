@@ -8,6 +8,7 @@ import (
 
 	"github.com/dalmarcogd/ledger-exp/pkg/database"
 	"github.com/dalmarcogd/ledger-exp/pkg/testingcontainers"
+	"github.com/dalmarcogd/ledger-exp/pkg/tracer"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,7 +19,7 @@ func TestDatabaseConnectivity(t *testing.T) {
 	assert.NoError(t, err)
 	defer terminate(ctx)
 
-	db, err := database.New(url, url)
+	db, err := database.New(tracer.NewNoop(), url, url)
 	assert.NoError(t, err)
 	defer db.Stop(ctx)
 
@@ -39,8 +40,8 @@ func TestDatabaseConnectivity(t *testing.T) {
 	})
 
 	t.Run("Do not validate readiness database when there is no connectivity", func(t *testing.T) {
-		url := "postgres://localhost:5432/issuing?sslmode=disable"
-		db, err := database.New(url, url)
+		url := "postgres://localhost:5432/ledger-exp?sslmode=disable"
+		db, err := database.New(tracer.NewNoop(), url, url)
 		assert.NoError(t, err)
 
 		healthCheck := NewDatabaseConnectivity(db.Master())
@@ -51,8 +52,8 @@ func TestDatabaseConnectivity(t *testing.T) {
 	})
 
 	t.Run("Do not validate liveness database when there is no connectivity", func(t *testing.T) {
-		url := "postgres://localhost:5432/issuing?sslmode=disable"
-		db, err := database.New(url, url)
+		url := "postgres://localhost:5432/ledger-exp?sslmode=disable"
+		db, err := database.New(tracer.NewNoop(), url, url)
 		assert.NoError(t, err)
 
 		healthCheck := NewDatabaseConnectivity(db.Master())

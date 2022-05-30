@@ -10,6 +10,7 @@ import (
 
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/dalmarcogd/ledger-exp/pkg/testingcontainers"
+	"github.com/dalmarcogd/ledger-exp/pkg/tracer"
 	"github.com/dalmarcogd/ledger-exp/pkg/zapctx"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -30,12 +31,13 @@ func TestDatabase(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("Invalid url", func(t *testing.T) {
-		_, err := New(gofakeit.URL(), gofakeit.URL())
+		_, err := New(tracer.NewNoop(), gofakeit.URL(), gofakeit.URL())
 		assert.Error(t, err)
 	})
 
 	t.Run("Ping invalid database", func(t *testing.T) {
 		database, err := New(
+			tracer.NewNoop(),
 			fmt.Sprintf(
 				"postgres://pass:user@localhost:%d/a-database-invalid?sslmode=disable",
 				gofakeit.Uint32(),
@@ -57,7 +59,7 @@ func TestDatabase(t *testing.T) {
 		assert.NoError(t, err)
 		defer terminate(ctx)
 
-		database, err := New(url, url)
+		database, err := New(tracer.NewNoop(), url, url)
 		if err != nil {
 			t.Error(err)
 		}
@@ -66,5 +68,4 @@ func TestDatabase(t *testing.T) {
 		assert.NoError(t, database.Master().PingContext(ctx))
 		assert.NoError(t, database.Replica().PingContext(ctx))
 	})
-
 }

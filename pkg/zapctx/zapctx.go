@@ -3,6 +3,7 @@ package zapctx
 import (
 	"context"
 
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -10,14 +11,16 @@ import (
 // L returns the global logger with considering the Go context.
 func L(ctx context.Context) *zap.Logger {
 	logger := zap.L()
-	//if spanFromContext, valid := tracer.SpanFromContext(ctx); valid {
-	//	return logger.With(
-	//		zap.Uint64("dd.trace_id", spanFromContext.Context().TraceID()),
-	//		zap.Uint64("dd.span_id", spanFromContext.Context().SpanID()),
-	//	)
-	//}
 
-	return logger
+	span := trace.SpanFromContext(ctx)
+	if !span.IsRecording() {
+		return logger
+	}
+
+	return logger.With(
+		zap.String("trace_id", span.SpanContext().TraceID().String()),
+		zap.String("span_id", span.SpanContext().SpanID().String()),
+	)
 }
 
 // StartZapCtx configure in zap.Globals logs the zapctx logger.
