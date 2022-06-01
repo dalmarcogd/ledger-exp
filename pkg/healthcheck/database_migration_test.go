@@ -1,5 +1,4 @@
 //go:build integration
-// +build integration
 
 package healthcheck
 
@@ -9,6 +8,7 @@ import (
 
 	"github.com/dalmarcogd/ledger-exp/pkg/database"
 	"github.com/dalmarcogd/ledger-exp/pkg/testingcontainers"
+	"github.com/dalmarcogd/ledger-exp/pkg/tracer"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -19,7 +19,7 @@ func TestDatabaseMigration(t *testing.T) {
 	assert.NoError(t, err)
 	defer terminate(ctx)
 
-	db, err := database.New(url, url)
+	db, err := database.New(tracer.NewNoop(), url, url)
 	assert.NoError(t, err)
 	defer db.Stop(ctx)
 

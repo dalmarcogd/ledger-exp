@@ -34,7 +34,6 @@ func (s service) Create(ctx context.Context, account Account) (Account, error) {
 	ctx, span := s.tracer.Span(ctx)
 	defer span.End()
 
-	account.ID = uuid.New()
 	model, err := s.repository.Create(ctx, newAccountModel(account))
 	if err != nil {
 		zapctx.L(ctx).Error("account_service_create_repository_error", zap.Error(err))
@@ -50,8 +49,7 @@ func (s service) Update(ctx context.Context, account Account) (Account, error) {
 	ctx, span := s.tracer.Span(ctx)
 	defer span.End()
 
-	model := newAccountModel(account)
-	model, err := s.repository.Update(ctx, model)
+	_, err := s.repository.Update(ctx, newAccountModel(account))
 	if err != nil {
 		zapctx.L(ctx).Error("account_service_update_repository_error", zap.Error(err))
 		span.RecordError(err)

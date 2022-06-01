@@ -6,6 +6,7 @@ import (
 
 	"github.com/dalmarcogd/ledger-exp/pkg/database"
 	"github.com/dalmarcogd/ledger-exp/pkg/tracer"
+	"github.com/google/uuid"
 )
 
 type Repository interface {
@@ -30,6 +31,9 @@ func (r repository) Create(ctx context.Context, model accountModel) (accountMode
 	ctx, span := r.tracer.Span(ctx)
 	defer span.End()
 
+	model.ID = uuid.New()
+	model.CreatedAt = time.Now().UTC()
+
 	_, err := r.db.Master().
 		NewInsert().
 		Model(&model).
@@ -52,7 +56,9 @@ func (r repository) Update(ctx context.Context, model accountModel) (accountMode
 	_, err := r.db.Master().
 		NewUpdate().
 		Model(&model).
+		WherePK().
 		Returning("*").
+		OmitZero().
 		Exec(ctx)
 	if err != nil {
 		span.RecordError(err)

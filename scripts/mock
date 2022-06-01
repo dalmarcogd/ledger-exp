@@ -14,3 +14,7 @@ mockgen -source pkg/redis/client.go -destination pkg/redis/client_mock.go -packa
 
 mockgen -source pkg/tracer/tracer.go -destination pkg/tracer/tracer_mock.go -package tracer Tracer
 
+# mocks to internal/balances
+
+mockgen -source internal/balances/service.go -destination internal/balances/service_mock.go -package balances Service
+

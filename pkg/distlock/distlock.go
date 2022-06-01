@@ -2,11 +2,13 @@ package distlock
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/dalmarcogd/ledger-exp/pkg/redis"
 	"github.com/dalmarcogd/ledger-exp/pkg/tracer"
 	"github.com/dalmarcogd/ledger-exp/pkg/zapctx"
+	redis2 "github.com/go-redis/redis/v8"
 	"go.uber.org/zap"
 )
 
@@ -67,8 +69,9 @@ func (rl distLock) Release(ctx context.Context, key string) bool {
 	defer span.End()
 
 	result, err := rl.store.Get(ctx, key).Result()
-	if err != nil {
+	if err != nil && !errors.Is(err, redis2.Nil) {
 		span.RecordError(err)
+		return false
 	}
 
 	if result == lockValue {

@@ -51,11 +51,11 @@ func (r repository) GetByFilter(ctx context.Context, filter transactionFilter) (
 	}
 
 	if filter.FromAccountID.Valid {
-		selectQuery.Where("from_acocunt_id = ?", filter.FromAccountID.UUID)
+		selectQuery.Where("from_account_id = ?", filter.FromAccountID.UUID)
 	}
 
 	if filter.ToAccountID.Valid {
-		selectQuery.Where("to_acocunt_id = ?", filter.FromAccountID.UUID)
+		selectQuery.Where("to_account_id = ?", filter.ToAccountID.UUID)
 	}
 
 	if filter.CreatedAtBegin.Valid {
