@@ -1,7 +1,7 @@
 --
 -- Enable uuid extension
 --
--- Use to primary keys and foreign keys in tables of ledger-exp database
+-- Use to primary keys and foreign keys in tables of dock-test database
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 --

@@ -8,7 +8,7 @@ import (
 )
 
 type Repository interface {
-	ListByFilter(ctx context.Context, filter statementFilter) (int, []statementModel, error)
+	ListByFilter(ctx context.Context, filter StatementFilter) (int, []statementModel, error)
 }
 
 type repository struct {
@@ -23,7 +23,7 @@ func NewRepository(t tracer.Tracer, db database.Database) Repository {
 	}
 }
 
-func (r repository) ListByFilter(ctx context.Context, filter statementFilter) (int, []statementModel, error) {
+func (r repository) ListByFilter(ctx context.Context, filter StatementFilter) (int, []statementModel, error) {
 	ctx, span := r.tracer.Span(ctx)
 	defer span.End()
 
@@ -47,9 +47,9 @@ func (r repository) ListByFilter(ctx context.Context, filter statementFilter) (i
 			filter.AccountID.String(),
 			filter.AccountID.String(),
 		).
-		Join("JOIN accounts AS from_acc").
+		Join("LEFT JOIN accounts AS from_acc").
 		JoinOn("from_acc.id = from_account_id").
-		Join("JOIN accounts AS to_acc").
+		Join("LEFT JOIN accounts AS to_acc").
 		JoinOn("to_acc.id = to_account_id").
 		Limit(size).
 		Offset((page - 1) * size)
@@ -58,6 +58,13 @@ func (r repository) ListByFilter(ctx context.Context, filter statementFilter) (i
 		selectQuery.Order("trx.created_at ASC")
 	} else if filter.Sort > 0 {
 		selectQuery.Order("trx.created_at DESC")
+	}
+
+	if !filter.CreatedAtBegin.IsZero() {
+		selectQuery.Where("trx.created_at >= ?", filter.CreatedAtBegin)
+	}
+	if !filter.CreatedAtEnd.IsZero() {
+		selectQuery.Where("trx.created_at <= ?", filter.CreatedAtEnd)
 	}
 
 	var stms []statementModel

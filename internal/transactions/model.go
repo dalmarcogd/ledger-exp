@@ -11,12 +11,13 @@ import (
 type transactionModel struct {
 	bun.BaseModel `bun:"table:transactions"`
 
-	ID            uuid.UUID `bun:"id,pk"`
-	FromAccountID uuid.UUID `bun:"from_account_id,nullzero"`
-	ToAccountID   uuid.UUID `bun:"to_account_id,nullzero"`
-	Amount        float64   `bun:"amount"`
-	Description   string    `bun:"description"`
-	CreatedAt     time.Time `bun:"created_at,notnull"`
+	ID            uuid.UUID       `bun:"id,pk"`
+	FromAccountID uuid.UUID       `bun:"from_account_id,nullzero"`
+	ToAccountID   uuid.UUID       `bun:"to_account_id,nullzero"`
+	Type          TransactionType `bun:"type"`
+	Amount        float64         `bun:"amount"`
+	Description   string          `bun:"description"`
+	CreatedAt     time.Time       `bun:"created_at,notnull"`
 }
 
 func newTransactionModel(tx Transaction) transactionModel {
@@ -24,6 +25,7 @@ func newTransactionModel(tx Transaction) transactionModel {
 		ID:            uuid.New(),
 		FromAccountID: tx.From,
 		ToAccountID:   tx.To,
+		Type:          tx.Type,
 		Amount:        tx.Amount,
 		Description:   tx.Description,
 		CreatedAt:     time.Now().UTC(),

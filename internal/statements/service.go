@@ -6,12 +6,11 @@ import (
 	"github.com/dalmarcogd/ledger-exp/internal/accounts"
 	"github.com/dalmarcogd/ledger-exp/pkg/tracer"
 	"github.com/dalmarcogd/ledger-exp/pkg/zapctx"
-	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
 type Service interface {
-	List(ctx context.Context, accountID uuid.UUID, page, size, sort int) (int, []Statement, error)
+	List(ctx context.Context, filter ListFilter) (int, []Statement, error)
 }
 
 type service struct {
@@ -23,15 +22,17 @@ func NewService(t tracer.Tracer, r Repository) Service {
 	return service{tracer: t, repository: r}
 }
 
-func (s service) List(ctx context.Context, accountID uuid.UUID, page, size, sort int) (int, []Statement, error) {
+func (s service) List(ctx context.Context, filter ListFilter) (int, []Statement, error) {
 	ctx, span := s.tracer.Span(ctx)
 	defer span.End()
 
-	total, statementModels, err := s.repository.ListByFilter(ctx, statementFilter{
-		Page:      page,
-		Size:      size,
-		Sort:      sort,
-		AccountID: accountID,
+	total, statementModels, err := s.repository.ListByFilter(ctx, StatementFilter{
+		Page:           filter.Page,
+		Size:           filter.Size,
+		Sort:           filter.Sort,
+		AccountID:      filter.AccountID,
+		CreatedAtBegin: filter.CreatedAtBegin,
+		CreatedAtEnd:   filter.CreatedAtEnd,
 	})
 	if err != nil {
 		zapctx.L(ctx).Error("statements_service_repository_error", zap.Error(err))
@@ -50,6 +51,7 @@ func (s service) List(ctx context.Context, accountID uuid.UUID, page, size, sort
 				ID:   model.ToAccountID,
 				Name: model.ToAccountName,
 			},
+			Type:        model.Type,
 			Amount:      model.Amount,
 			Description: model.Description,
 			CreatedAt:   model.CreatedAt,

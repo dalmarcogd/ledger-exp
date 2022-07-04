@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS transactions
     id              VARCHAR(36) PRIMARY KEY,
     from_account_id VARCHAR(36),
     to_account_id   VARCHAR(36),
+    type            VARCHAR(36)  NOT NULL,
     amount          DECIMAL      NOT NULL,
     description     VARCHAR(200) NOT NULL,
     created_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),

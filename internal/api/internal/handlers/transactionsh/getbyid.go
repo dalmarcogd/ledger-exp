@@ -3,6 +3,7 @@ package transactionsh
 import (
 	"net/http"
 
+	"github.com/dalmarcogd/ledger-exp/internal/api/internal/handlers/stringers"
 	"github.com/dalmarcogd/ledger-exp/internal/transactions"
 	"github.com/dalmarcogd/ledger-exp/pkg/zapctx"
 	"github.com/google/uuid"
@@ -43,10 +44,11 @@ func NewGetByIDTransactionFunc(svc transactions.Service) GetByIDTransactionFunc 
 		return c.JSON(
 			http.StatusOK,
 			createdTransaction{
-				ID:          transaction.ID.String(),
-				From:        transaction.From.String(),
-				To:          transaction.To.String(),
-				Amount:      float64(transaction.Amount),
+				ID:          stringers.UUIDEmpty(transaction.ID),
+				From:        stringers.UUIDEmpty(transaction.From),
+				To:          stringers.UUIDEmpty(transaction.To),
+				Type:        string(transaction.Type),
+				Amount:      transaction.Amount,
 				Description: transaction.Description,
 			},
 		)

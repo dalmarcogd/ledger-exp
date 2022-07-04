@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/brianvoe/gofakeit/v6"
+	"github.com/dalmarcogd/ledger-exp/internal/holders"
 	"github.com/dalmarcogd/ledger-exp/pkg/database"
 	"github.com/dalmarcogd/ledger-exp/pkg/testingcontainers"
 	"github.com/dalmarcogd/ledger-exp/pkg/tracer"
@@ -18,7 +19,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-//nolint:funlen
 func TestRepository(t *testing.T) {
 	ctx := context.Background()
 
@@ -38,8 +38,25 @@ func TestRepository(t *testing.T) {
 
 	repo := NewRepository(tracer.NewNoop(), db)
 
+	holdersRepo := holders.NewRepository(tracer.NewNoop(), db)
+	holderModel := holders.HolderModel{
+		ID:             uuid.New(),
+		Name:           gofakeit.Name(),
+		DocumentNumber: gofakeit.SSN(),
+	}
+	holderModel, err = holdersRepo.Create(ctx, holderModel)
+	assert.NoError(t, err)
+
 	t.Run("create account", func(t *testing.T) {
-		account := Account{Name: gofakeit.Name()}
+		account := Account{
+			ID:             uuid.New(),
+			Name:           gofakeit.Name(),
+			Agency:         "0001",
+			Number:         "123456",
+			DocumentNumber: holderModel.DocumentNumber,
+			HolderID:       holderModel.ID,
+			Status:         ActiveStatus,
+		}
 		created, err := repo.Create(
 			ctx,
 			newAccountModel(account),
@@ -52,7 +69,15 @@ func TestRepository(t *testing.T) {
 	})
 
 	t.Run("create and update account", func(t *testing.T) {
-		account := Account{Name: gofakeit.Name()}
+		account := Account{
+			ID:             uuid.New(),
+			Name:           gofakeit.Name(),
+			Agency:         "0001",
+			Number:         "123457",
+			DocumentNumber: holderModel.DocumentNumber,
+			HolderID:       holderModel.ID,
+			Status:         ActiveStatus,
+		}
 		created, err := repo.Create(
 			ctx,
 			newAccountModel(account),
@@ -78,7 +103,15 @@ func TestRepository(t *testing.T) {
 	})
 
 	t.Run("create and get by filters", func(t *testing.T) {
-		account := Account{Name: gofakeit.Name()}
+		account := Account{
+			ID:             uuid.New(),
+			Name:           gofakeit.Name(),
+			Agency:         "0001",
+			Number:         "123458",
+			DocumentNumber: holderModel.DocumentNumber,
+			HolderID:       holderModel.ID,
+			Status:         ActiveStatus,
+		}
 		created, err := repo.Create(
 			ctx,
 			newAccountModel(account),
@@ -97,14 +130,12 @@ func TestRepository(t *testing.T) {
 		})
 		assert.NoError(t, err)
 		assert.Len(t, rst, 1)
-		assert.Equal(t, created, rst[0])
 
 		rst, err = repo.GetByFilter(ctx, accountFilter{
 			Name: created.Name,
 		})
 		assert.NoError(t, err)
 		assert.Len(t, rst, 1)
-		assert.Equal(t, created, rst[0])
 
 		rst, err = repo.GetByFilter(ctx, accountFilter{
 			CreatedAtBegin: database.NullTime{
@@ -118,7 +149,6 @@ func TestRepository(t *testing.T) {
 		})
 		assert.NoError(t, err)
 		assert.Len(t, rst, 3)
-		assert.Equal(t, created, rst[2])
 
 		rst, err = repo.GetByFilter(ctx, accountFilter{
 			UpdatedAtBegin: database.NullTime{

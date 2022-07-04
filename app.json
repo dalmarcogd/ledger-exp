@@ -1,11 +1,11 @@
 {
-  "name": "ledger Exp Go",
-  "description": "ledger Exp Go",
+  "name": "Docker Test Go",
+  "description": "Dock Test Go",
   "keywords": [
-    "ledger",
-    "exp",
+    "dock",
+    "test",
     "go"
   ],
-  "website": "https://github.com/dalmarcogd/ledger-exp",
-  "repository": "https://github.com/dalmarcogd/ledger-exp"
+  "website": "https://github.com/dalmarcogd/dock-test",
+  "repository": "https://github.com/dalmarcogd/dock-test"
 }

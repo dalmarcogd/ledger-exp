@@ -1,17 +1,17 @@
 services:
 
-  ledger-exp-api:
+  dock-test-api:
     depends_on:
       - postgres
       - database-migration
       - redis
       - otel-collector
-    image: ledger-exp-api:latest
+    image: dock-test-api:latest
     build:
       dockerfile: ./Dockerfile
       context: .
       target: build-local
-    container_name: ledger-exp-api
+    container_name: dock-test-api
     restart: unless-stopped
     networks:
       - current
@@ -41,9 +41,9 @@ services:
       - "5432:5432"
     command: [ "postgres", "-c", "log_statement=all", "-c", "log_destination=stderr" ]
     environment:
-      POSTGRES_USER: ledger-exp
-      POSTGRES_PASSWORD: ledger-exp
-      POSTGRES_DB: ledger-exp
+      POSTGRES_USER: dock-test
+      POSTGRES_PASSWORD: dock-test
+      POSTGRES_DB: dock-test
 
   database-migration:
     image: migrate/migrate
@@ -66,6 +66,24 @@ services:
     command: redis-server --save 60 1 --requirepass MDNcVb924a
     ports:
       - '6379:6379'
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    restart: unless-stopped
+    container_name: redis-commander
+    depends_on:
+      - redis
+    environment:
+      REDIS_HOSTS: redis
+      REDIS_HOST: redis
+      REDIS_PORT: redis:6379
+      REDIS_PASSWORD: "MDNcVb924a"
+      HTTP_USER: root
+      HTTP_PASSWORD: root
+    networks:
+      - current
+    ports:
+      - 8081:8081
 
   otel-collector:
     image: otel/opentelemetry-collector:latest

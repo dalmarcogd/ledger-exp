@@ -2,6 +2,8 @@ package balances
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 
 	"github.com/dalmarcogd/ledger-exp/pkg/tracer"
 	"github.com/dalmarcogd/ledger-exp/pkg/zapctx"
@@ -28,6 +30,12 @@ func (s service) GetByAccountID(ctx context.Context, accountID uuid.UUID) (Accou
 
 	accountBalance, err := s.repository.GetByAccountID(ctx, accountID)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return AccountBalance{
+				AccountID:      accountID,
+				CurrentBalance: 0,
+			}, nil
+		}
 		zapctx.L(ctx).Error("balances_service_repository_error", zap.Error(err))
 		span.RecordError(err)
 		return AccountBalance{}, err

@@ -16,15 +16,18 @@ type (
 		FromAccountName string    `bun:"from_account_name"`
 		ToAccountID     uuid.UUID `bun:"to_account_id"`
 		ToAccountName   string    `bun:"to_account_name"`
+		Type            string    `bun:"type"`
 		Amount          float64   `bun:"amount"`
 		Description     string    `bun:"description"`
 		CreatedAt       time.Time `bun:"created_at"`
 	}
 
-	statementFilter struct {
-		Page      int
-		Size      int
-		Sort      int
-		AccountID uuid.UUID
+	StatementFilter struct {
+		Page           int
+		Size           int
+		Sort           int
+		AccountID      uuid.UUID
+		CreatedAtBegin time.Time
+		CreatedAtEnd   time.Time
 	}
 )

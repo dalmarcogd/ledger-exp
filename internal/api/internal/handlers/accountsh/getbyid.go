@@ -11,40 +11,44 @@ import (
 )
 
 type (
-	GetByIDAccountFunc echo.HandlerFunc
+	GetByIDFunc echo.HandlerFunc
 
 	getByID struct {
 		ID string `param:"id"`
 	}
 )
 
-func NewGetByIDAccountFunc(svc accounts.Service) GetByIDAccountFunc {
+func NewGetByIDFunc(svc accounts.Service) GetByIDFunc {
 	return func(c echo.Context) error {
 		ctx := c.Request().Context()
 
 		var get getByID
 		if err := c.Bind(&get); err != nil {
-			zapctx.L(ctx).Error("get_by_id_account_handler_bind_error", zap.Error(err))
+			zapctx.L(ctx).Error("get_by_account_id_handler_bind_error", zap.Error(err))
 			return echo.NewHTTPError(http.StatusUnprocessableEntity, err.Error())
 		}
 
 		id, err := uuid.Parse(get.ID)
 		if err != nil {
-			zapctx.L(ctx).Error("get_by_id_account_handler_bind_error", zap.Error(err))
+			zapctx.L(ctx).Error("get_by_account_id_handler_bind_error", zap.Error(err))
 			return echo.NewHTTPError(http.StatusUnprocessableEntity, "invalid id")
 		}
 
 		account, err := svc.GetByID(ctx, id)
 		if err != nil {
-			zapctx.L(ctx).Error("get_by_id_account_handler_service_error", zap.Error(err))
+			zapctx.L(ctx).Error("get_by_account_id_handler_service_error", zap.Error(err))
 			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
 
 		return c.JSON(
 			http.StatusOK,
 			createdAccount{
-				ID:   account.ID.String(),
-				Name: account.Name,
+				ID:             account.ID.String(),
+				Name:           account.Name,
+				Agency:         account.Agency,
+				Number:         account.Number,
+				DocumentNumber: account.DocumentNumber,
+				Status:         string(account.Status),
 			},
 		)
 	}

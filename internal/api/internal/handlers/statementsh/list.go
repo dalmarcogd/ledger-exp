@@ -15,10 +15,12 @@ type (
 	ListAccountStatementFunc echo.HandlerFunc
 
 	listAccountStatement struct {
-		AccountID string `param:"id"`
-		Sort      int    `query:"sort"`
-		Page      int    `query:"page"`
-		Size      int    `query:"size"`
+		AccountID      string `param:"id"`
+		Sort           int    `query:"sort"`
+		Page           int    `query:"page"`
+		Size           int    `query:"size"`
+		CreatedAtBegin string `query:"created_at_begin"`
+		CreatedAtEnd   string `query:"created_at_end"`
 	}
 
 	account struct {
@@ -27,8 +29,9 @@ type (
 	}
 
 	statement struct {
-		FromAccount account   `json:"from_account"`
-		ToAccount   account   `json:"to_account"`
+		FromAccount *account  `json:"from_account,omitempty"`
+		ToAccount   *account  `json:"to_account,omitempty"`
+		Type        string    `json:"type"`
 		Amount      float64   `json:"amount"`
 		CreatedAt   time.Time `json:"created_at"`
 	}
@@ -73,7 +76,31 @@ func NewListAccountStatementFunc(svc statements.Service) ListAccountStatementFun
 			lsa.Size = 20
 		}
 
-		total, stats, err := svc.List(ctx, id, lsa.Page, lsa.Size, lsa.Sort)
+		var createdAtBegin, createdAtEnd time.Time
+		if lsa.CreatedAtBegin != "" {
+			createdAtBegin, err = time.Parse("2006-01-02", lsa.CreatedAtBegin)
+			if err != nil {
+				zapctx.L(ctx).Error("list_account_handler_bind_error", zap.Error(err))
+				return echo.NewHTTPError(http.StatusUnprocessableEntity, "invalid created_at_begin")
+			}
+		}
+
+		if lsa.CreatedAtEnd != "" {
+			createdAtEnd, err = time.Parse("2006-01-02", lsa.CreatedAtEnd)
+			if err != nil {
+				zapctx.L(ctx).Error("list_account_handler_bind_error", zap.Error(err))
+				return echo.NewHTTPError(http.StatusUnprocessableEntity, "invalid created_at_end")
+			}
+		}
+
+		total, stats, err := svc.List(ctx, statements.ListFilter{
+			Sort:           lsa.Sort,
+			Page:           lsa.Page,
+			Size:           lsa.Size,
+			AccountID:      id,
+			CreatedAtBegin: createdAtBegin,
+			CreatedAtEnd:   createdAtEnd,
+		})
 		if err != nil {
 			zapctx.L(ctx).Error("list_account_handler_service_error", zap.Error(err))
 			return err
@@ -87,16 +114,21 @@ func NewListAccountStatementFunc(svc statements.Service) ListAccountStatementFun
 		accountStatements := make([]statement, len(stats))
 		for i, transaction := range stats {
 			accountStatements[i] = statement{
-				FromAccount: account{
-					ID:   transaction.FromAccount.ID.String(),
-					Name: transaction.FromAccount.Name,
-				},
-				ToAccount: account{
-					ID:   transaction.ToAccount.ID.String(),
-					Name: transaction.ToAccount.Name,
-				},
+				Type:      transaction.Type,
 				Amount:    transaction.Amount,
 				CreatedAt: transaction.CreatedAt,
+			}
+			if transaction.FromAccount.ID != uuid.Nil {
+				accountStatements[i].FromAccount = &account{
+					ID:   transaction.FromAccount.ID.String(),
+					Name: transaction.FromAccount.Name,
+				}
+			}
+			if transaction.ToAccount.ID != uuid.Nil {
+				accountStatements[i].ToAccount = &account{
+					ID:   transaction.ToAccount.ID.String(),
+					Name: transaction.ToAccount.Name,
+				}
 			}
 		}
 

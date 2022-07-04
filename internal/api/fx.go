@@ -11,9 +11,12 @@ import (
 	"github.com/dalmarcogd/ledger-exp/internal/api/internal/environment"
 	"github.com/dalmarcogd/ledger-exp/internal/api/internal/handlers"
 	"github.com/dalmarcogd/ledger-exp/internal/api/internal/handlers/accountsh"
+	"github.com/dalmarcogd/ledger-exp/internal/api/internal/handlers/balancesh"
+	"github.com/dalmarcogd/ledger-exp/internal/api/internal/handlers/holdersh"
 	"github.com/dalmarcogd/ledger-exp/internal/api/internal/handlers/statementsh"
 	"github.com/dalmarcogd/ledger-exp/internal/api/internal/handlers/transactionsh"
 	"github.com/dalmarcogd/ledger-exp/internal/balances"
+	"github.com/dalmarcogd/ledger-exp/internal/holders"
 	"github.com/dalmarcogd/ledger-exp/internal/statements"
 	"github.com/dalmarcogd/ledger-exp/internal/transactions"
 	"github.com/dalmarcogd/ledger-exp/pkg/database"
@@ -53,6 +56,8 @@ var Module = fx.Options(
 	),
 	// Domains
 	fx.Provide(
+		holders.NewRepository,
+		holders.NewService,
 		accounts.NewRepository,
 		accounts.NewService,
 		transactions.NewRepository,
@@ -66,10 +71,20 @@ var Module = fx.Options(
 	fx.Provide(
 		handlers.NewLivenessFunc,
 		handlers.NewReadinessFunc,
+		holdersh.NewCreateHolderFunc,
+		holdersh.NewGetByIDHolderFunc,
+		holdersh.NewListHoldersFunc,
 		accountsh.NewCreateAccountFunc,
-		accountsh.NewGetByIDAccountFunc,
+		accountsh.NewBlockByIDFunc,
+		accountsh.NewUnblockByIDFunc,
+		accountsh.NewCloseByIDFunc,
+		accountsh.NewGetByIDFunc,
+		accountsh.NewListAccountsFunc,
 		statementsh.NewListAccountStatementFunc,
-		transactionsh.NewCreateTransactionFunc,
+		balancesh.NewGetBalanceByAccountIDFunc,
+		transactionsh.NewCreateCreditTransactionFunc,
+		transactionsh.NewCreateDebitTransactionFunc,
+		transactionsh.NewCreateP2PTransactionFunc,
 		transactionsh.NewGetByIDTransactionFunc,
 	),
 	// Startup applications
@@ -103,21 +118,41 @@ func runHTTPServer(
 	t tracer.Tracer,
 	readinessFunc handlers.ReadinessFunc,
 	livenessFunc handlers.LivenessFunc,
+	createHolderFunc holdersh.CreateHolderFunc,
+	getByIDHolderFunc holdersh.GetByIDHolderFunc,
+	listHoldersFunc holdersh.ListHoldersFunc,
 	createAccountFunc accountsh.CreateAccountFunc,
-	getByIDAccountFunc accountsh.GetByIDAccountFunc,
-	createTransactionFunc transactionsh.CreateTransactionFunc,
+	closeByIDFunc accountsh.CloseByIDFunc,
+	blockByIDFunc accountsh.BlockByIDFunc,
+	unblockByIDFunc accountsh.UnblockByIDFunc,
+	getByIDAccountFunc accountsh.GetByIDFunc,
+	listAccountsFunc accountsh.ListAccountsFunc,
+	createCreditTransactionFunc transactionsh.CreateCreditTransactionFunc,
+	createDebitTransactionFunc transactionsh.CreateDebitTransactionFunc,
+	createP2PTransactionFunc transactionsh.CreateP2PTransactionFunc,
 	getByIDTransactionFunc transactionsh.GetByIDTransactionFunc,
 	listAccountStatementFunc statementsh.ListAccountStatementFunc,
+	getBalanceByIDAccountFunc balancesh.GetBalanceByAccountIDFunc,
 ) error {
 	e := echo.New()
 
 	e.GET("/readiness", echo.HandlerFunc(readinessFunc))
 	e.GET("/liveness", echo.HandlerFunc(livenessFunc))
 	v1 := e.Group("/v1")
+	v1.POST("/holders", echo.HandlerFunc(createHolderFunc))
+	v1.GET("/holders/:id", echo.HandlerFunc(getByIDHolderFunc))
+	v1.GET("/holders", echo.HandlerFunc(listHoldersFunc))
 	v1.POST("/accounts", echo.HandlerFunc(createAccountFunc))
+	v1.GET("/accounts", echo.HandlerFunc(listAccountsFunc))
 	v1.GET("/accounts/:id", echo.HandlerFunc(getByIDAccountFunc))
+	v1.PUT("/accounts/:id/blocks", echo.HandlerFunc(blockByIDFunc))
+	v1.PUT("/accounts/:id/unblocks", echo.HandlerFunc(unblockByIDFunc))
+	v1.PUT("/accounts/:id/closes", echo.HandlerFunc(closeByIDFunc))
 	v1.GET("/accounts/:id/statements", echo.HandlerFunc(listAccountStatementFunc))
-	v1.POST("/transactions", echo.HandlerFunc(createTransactionFunc))
+	v1.GET("/accounts/:id/balances", echo.HandlerFunc(getBalanceByIDAccountFunc))
+	v1.POST("/transactions/credits", echo.HandlerFunc(createCreditTransactionFunc))
+	v1.POST("/transactions/debits", echo.HandlerFunc(createDebitTransactionFunc))
+	v1.POST("/transactions/p2p", echo.HandlerFunc(createP2PTransactionFunc))
 	v1.GET("/transactions/:id", echo.HandlerFunc(getByIDTransactionFunc))
 
 	hmux := http.NewServeMux()
