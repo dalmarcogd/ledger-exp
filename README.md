@@ -1,70 +1,69 @@
 # ledger-exp
 
-## Estrutura de tabelas
-![img.png](.github/images/img.png)
+## Table Structure
+![Table Structure](.github/images/img.png)
 
-## Arquitetura da aplicação
-![architecture.png](.github/images/architecture.png)
+## Application Architecture
+![Architecture](.github/images/architecture.png)
 
-- Nestre projeto foi utilizado o [PostgreSQL](https://www.postgresql.org/) como solução de banco de dados, o [Redis](https://redis.io/) foi escolhido para camada de cache 
-e controle de concorrencia([distlock](https://redis.io/docs/reference/patterns/distributed-locks/)).
-- Na parte de observabilidade a escolha foi pelo projeto open source [OpenTelemetry](https://opentelemetry.io/), que possibilita a distribuição de métricas e spans
-para diferentes provedores de forma agnóstica.
+- This project uses [PostgreSQL](https://www.postgresql.org/) as the database solution and [Redis](https://redis.io/) for caching and concurrency control ([distlock](https://redis.io/docs/reference/patterns/distributed-locks/)).
+- For observability, the open-source project [OpenTelemetry](https://opentelemetry.io/) was chosen, allowing for agnostic distribution of metrics and spans to different providers.
 
-### Pacotes
-![img.png](./.github/images/packages.png)
- - A pasta /cmd contém o bootstrap/main da aplicação.
- - Dentro de /internal foram distribuidos os pacotes com o contexto de négocio.
-   1. **accounts** -> Gestão das contas dos postadores;
-   2. **api** -> Implementação dos handlers http;
-   3. **balances** -> Gestão dos saldos das contas, disponibilizado pela view **transactions_balances**;
-   4. **holders** -> Gestão dos postadores;
-   5. **statements** -> Apresentação do extrato da conta, baseado nas transações. Feature separada do package **transactions** para prover maior autonomia de filtros;
-   6. **transactions** -> Gestão das transações realizadas, como créditos, débitos e transferências entre contas;
- - Em /migrations disponibilizado todos os scripts sql (DDL) para migração do banco de dados.
- - Em /pkg estão disponíveis todos pacotes utilizados para criação da aplicação, estes que não possuem relação com o negócio.
+### Packages
+![Packages](./.github/images/packages.png)
 
-## Como rodar o projeto?
+- The `/cmd` directory contains the application bootstrap/main.
+- The `/internal` directory contains business logic packages:
+  1. **accounts**: Manages poster accounts;
+  2. **api**: Implements HTTP handlers;
+  3. **balances**: Manages account balances, provided by the **transactions_balances** view;
+  4. **holders**: Manages posters;
+  5. **statements**: Displays account statements based on transactions, separated from the **transactions** package for better filter autonomy;
+  6. **transactions**: Manages transactions like credits, debits, and transfers between accounts.
+- The `/migrations` directory contains all SQL scripts (DDL) for database migration.
+- The `/pkg` directory includes all packages used in the application that are not business-related.
+
+## How to Run the Project?
 ```shell
-docker-compose --env-file .env-docker  up -d
+docker-compose --env-file .env-docker up -d
 ```
-Após a inicialização de todos os serviços, eles estaram expostos em:
-_A migração do banco de dados irá ser executada juntamente com a inicialição do docker-compose_
+Once all services are up and running, they will be exposed at:
+_Database migration will be executed along with docker-compose startup_
 - ledger-exp-api -> [localhost:8080](http://localhost:8080)
 - postgres -> [localhost:5432](postgres://ledger-exp:ledger-exp@localhost:5432/ledger-exp?sslmode=disable)
 - redis-commander -> [localhost:8081](http://localhost:8081/) root - root
 - jaeger -> [localhost:16686](http://localhost:16686/search)
 - prometheus -> [localhost:9090](http://localhost:9090/graph)
 
-## Como rodar os testes unitários e de integração?
-Unitários:
+## How to Run Unit and Integration Tests?
+Unit Tests:
 ```shell
 go test -json -race -tags=unit ./...
 ```
 
-Integração:
+Integration Tests:
 ```shell
 go test -json -race -tags=integration ./...
 ```
 
-## Como testar?
-Sugiro utilizar o arquivo exportado do Insomnia, já possui todas os endpoints mapeados com exemplos de utilização.
-[Arquivo](./Insomnia_ledger-exp.json)
+## How to Test the API?
+You can use the Insomnia exported file, which contains all mapped endpoints with usage examples.
+[File](./Insomnia_ledger-exp.json)
 
-Porém para um fluxo consistente, devemos chamar os seguintes endpoints:
+For a consistent flow, follow these endpoints:
 1. POST /v1/holders
 2. POST /v1/accounts
-3. Criar transações
-   1. POST /v1/transactions/credits -> realiza um crédito na conta.
-   2. POST /v1/transactions/debits -> realiza um débito na conta.
-   3. POST /v1/transactions/p2p -> realiza uma transferência entre contas.
-4. GET /v1/accounts/:accountID/statements -> extrato da conta.
-5. GET /v1/accounts/:accountID/balances -> consulta saldo da conta.
+3. Create transactions:
+   1. POST /v1/transactions/credits -> Credit the account.
+   2. POST /v1/transactions/debits -> Debit the account.
+   3. POST /v1/transactions/p2p -> Transfer between accounts.
+4. GET /v1/accounts/:accountID/statements -> Account statement.
+5. GET /v1/accounts/:accountID/balances -> Check account balance.
 
-## Curiosidades
-1. Como funciona a geração dos mocks utilizados nos testes?
-   - Na pasta ./scripts existe um arquivo shell onde todos os arquivos/interfaces são mapeados para gerar um mock.
-2. Como a migração do banco de dados acontece? 
-   - A migração do banco de dados é feita pelo service database-migration, definido no [docker-compose.yml](./docker-compose.yml).
-3. Como a observabilidade funciona?
-   - Foi utilizado o service OpenTelemetry Collector definido no [docker-compose.yml](./docker-compose.yml), para recepcionar todos os spans e métricas geradas pela aplicação e os trasmite ao Jaeger e Prometheus, respectivamente.
+## Additional Information
+1. **How are mocks generated for tests?**
+   - In the `./scripts` directory, there's a shell file that maps all files/interfaces to generate a mock.
+2. **How does database migration work?**
+   - Database migration is handled by the `database-migration` service defined in the [docker-compose.yml](./docker-compose.yml).
+3. **How does observability work?**
+   - The OpenTelemetry Collector service defined in the [docker-compose.yml](./docker-compose.yml) receives all spans and metrics generated by the application and transmits them to Jaeger and Prometheus, respectively.
